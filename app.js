@@ -62,7 +62,7 @@ $(function () {
         'use strict';
         
         Octocat.octocats = {};
-    
+            
         function Octocat(settings, isSelf) {
             if (isSelf) {
                 Octocat.self = this;
@@ -78,7 +78,12 @@ $(function () {
                 text: null,
                 image: settings.image || Math.floor(Math.random() * icons.length)
             };
-            this.createElement("user");
+            if (isSelf) {
+                this.createElement("user");
+            } else {
+                this.createElement("");
+            }
+            
         }
 
         Octocat.prototype.createElement = function (clazz) {
@@ -162,8 +167,8 @@ $(function () {
 
     // USER MOVE CLICK
     window.addEventListener('click', function (e) {
-        console.log(e.target.nodeName);
-        if (!(e.target.nodeName.toUpperCase() === "BODY" || e.target.nodeName.toUpperCase() === "HTML")) return;
+        console.log(e.target.className);
+        if (e.target.className.indexOf('noclick') != -1) return;
         var loc = {x: e.pageX, y: e.pageY};
         Octocat.self[Messages.USER_MOVE](loc);
         emit(Messages.USER_MOVE, loc);

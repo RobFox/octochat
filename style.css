@@ -69,6 +69,9 @@ form {
   margin:20px;
   margin-right:22px;
 }
+.user .bubble {
+    z-index: 1002;
+}
 .bubble {
   background: #e5e5e5;
   background: -moz-linear-gradient(top,  #e5e5e5 0%, #d8d8d8 50%, #d1d1d1 52%, #d1d1d1 100%);
@@ -92,6 +95,7 @@ form {
   font-weight:400;
   color:#222;
   text-shadow:rgba(255,255,255,0.5) 0px 1px 0px;
+  z-index: 1001;
 }
 .bubble:after {
   content:"";
