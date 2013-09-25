@@ -75,8 +75,8 @@
                 width: user.width + "px",
                 height: user.width + "px",
                 backgroundImage: "url('" + 'http://octodex.github.com/images/' + octocats[user.image] + "')",
-                left: user.x,
-                top: user.y,
+                left: user.x + "px",
+                top: user.y + "px",
                 backgroundSize: user.width + 'px ' + user.height + 'px'
             });
             $('body').append($div);
@@ -132,11 +132,12 @@
             }
         });
 
-        window.onclick = function (e) {
+        window.addEventListener('click', function (e) {
             if (e.y > $(window).height() - 110) return;
-            gui[Messages.USER_MOVE](e, id);
-            emit(Messages.USER_MOVE, {x: e.x, y: e.y});
-        }
+            var loc = {x: e.pageX, y: e.pageY};
+            gui[Messages.USER_MOVE](loc, id);
+            emit(Messages.USER_MOVE, loc);
+        });
     });
 
     function sendMessage() {
