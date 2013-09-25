@@ -133,7 +133,7 @@
         });
 
         window.addEventListener('click', function (e) {
-            if (e.y > $(window).height() - 110) return;
+            if (e.target.tagName.toUpperCase() !== "BODY") return;
             var loc = {x: e.pageX, y: e.pageY};
             gui[Messages.USER_MOVE](loc, id);
             emit(Messages.USER_MOVE, loc);
