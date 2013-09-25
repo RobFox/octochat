@@ -28,28 +28,23 @@ $(function () {
     var Router = (function() {
         'use strict';
     
-        function Router() {
-            //List of all users in server
-            this.octocats = {};
-        }
+        function Router() {}
     
         Router.prototype.user_join = function (settings, id) {
-            this.octocats[id] = new Octocat(settings);
-            console.log("NEW USERS:", this.octocats);
+            Octocat.octocats[id] = new Octocat(settings);
         }
 
         Router.prototype.user_chat = function (msg, id) {
-            this.octocats[id].user_chat(msg);
+            Octocat.octocats[id].user_chat(msg);
         }
 
         Router.prototype.user_move = function (loc, id) {
-            console.log(this.octocats[id]);
-            this.octocats[id][Messages.USER_MOVE](loc);
+            Octocat.octocats[id][Messages.USER_MOVE](loc);
         }
 
         Router.prototype.user_leave = function (msg, id) {
-            this.octocats[id].remove();
-            delete octocats[id];
+            Octocat.octocats[id].remove();
+            delete Octocat.octocats[id];
         }
 
         Router.prototype.connect = function (msg) {
@@ -65,8 +60,13 @@ $(function () {
     //One user in server
     var Octocat = (function() {
         'use strict';
+        
+        Octocat.octocats = {};
     
-        function Octocat(settings) {
+        function Octocat(settings, isSelf) {
+            if (isSelf) {
+                Octocat.self = this;
+            }
             this.$bubble = null;
             this.$div = null
             settings = settings || {};
@@ -82,7 +82,6 @@ $(function () {
         }
 
         Octocat.prototype.createElement = function (clazz) {
-            console.log(this.settings);
             this.$div = $('<div></div>').addClass("kitten " + clazz).css({
                 width: this.settings.width + "px",
                 height: this.settings.width + "px",
@@ -95,7 +94,6 @@ $(function () {
             
             this.$bubble = $('<div></div>').addClass("bubble");
             this.$div.append(this.$bubble);
-            console.log(this.$div);
         }
 
         Octocat.prototype.user_chat = function (msg) {
@@ -123,25 +121,24 @@ $(function () {
     }());
 
     var channel = new HydnaChannel('test123.hydna.net', 'rwe'),
-        id,
         router = new Router();
+    new Octocat(null, true);
 
     channel.onsignal = function(e) {
         var msg = JSON.parse(e.message);
         console.log(msg);
-        if (msg.id === octocat.id) {
+        if (msg.id === Octocat.self.id) {
             console.log("return");
             return;
         }
-        router[msg.type](msg.msg, msg.id);
-        if (!octocat.id) {
-            octocat.id = msg.id;
+        if (!Octocat.self.id) {
+            Octocat.self.id = msg.id;
         }
+        router[msg.type](msg.msg, msg.id);
     };
 
     channel.onopen = function() {
-        octocat = new Octocat();
-        emit(Messages.USER_JOIN, octocat.settings);
+        emit(Messages.USER_JOIN, Octocat.self.settings);
     };
 
     function emit(type, message) {
@@ -165,9 +162,10 @@ $(function () {
 
     // USER MOVE CLICK
     window.addEventListener('click', function (e) {
-        if (e.target.tagName.toUpperCase() !== "BODY") return;
+        console.log(e.target.nodeName);
+        if (!(e.target.nodeName.toUpperCase() === "BODY" || e.target.nodeName.toUpperCase() === "HTML")) return;
         var loc = {x: e.pageX, y: e.pageY};
-        octocat[Messages.USER_MOVE](loc, id);
+        Octocat.self[Messages.USER_MOVE](loc);
         emit(Messages.USER_MOVE, loc);
     });
 
@@ -175,6 +173,6 @@ $(function () {
         var msg = $('input[name=msg]').val();
         $('input[name=msg]').val('');
         emit(Messages.USER_CHAT, msg);
-        octocat[Messages.USER_CHAT](msg, id);
+        Octocat.self[Messages.USER_CHAT](msg);
     }
 });
