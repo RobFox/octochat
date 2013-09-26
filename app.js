@@ -85,21 +85,21 @@ $(function () {
         
         ChatHistory.prototype.createMessageElement = function (octocat, msg, isColor, img) {
             var color = isColor ? '#E5ECFF' : '#FFF';
-            var $div = $('<div></div>').addClass('history-row').css({
+            var $div = $('<div></div>').addClass('history-row noclick').css({
                 backgroundColor: color
             });
             var $avatar;
             if (octocat) {
-                $avatar = $('<div></div>').addClass('avatar').css({
+                $avatar = $('<div></div>').addClass('avatar noclick').css({
                     backgroundImage: "url('" + 'http://octodex.github.com/images/' + icons[octocat.settings.image] + "')",
                 });
             } else {
-                $avatar = $('<div></div>').addClass('avatar').css({
+                $avatar = $('<div></div>').addClass('avatar noclick').css({
                     backgroundImage: "url('" + 'http://octodex.github.com/images/' + icons[img] + "')",
                 });
             }
             
-            var $content = $('<div></div>').addClass('content').html(escapeHtml(msg));
+            var $content = $('<div></div>').addClass('content noclick').html(escapeHtml(msg));
             $div.append($avatar);
             $div.append($content);
             $('.history').append($div).clearQueue().stop().animate({
