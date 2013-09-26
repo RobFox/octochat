@@ -34,8 +34,12 @@ $(function () {
             Octocat.octocats[id] = new Octocat(settings);
         }
 
-        Router.prototype.user_chat = function (msg, id) {
-            Octocat.octocats[id].user_chat(msg);
+        Router.prototype.user_chat = function (msg, id, img) {
+            if (Octocat.octocats[id]) {
+                Octocat.octocats[id].user_chat(msg);
+            } else {
+                history.add(null, msg, img);
+            }
         }
 
         Router.prototype.user_move = function (loc, id) {
@@ -48,12 +52,63 @@ $(function () {
         }
 
         Router.prototype.connect = function (msg) {
-            for (var key in msg) {
-                this[Messages.USER_JOIN](msg[key], key);
+            console.log(msg);
+            for (var key in msg.users) {
+                this[Messages.USER_JOIN](msg.users[key], key);
+            }
+            for (key in msg.chat) {
+                this[Messages.USER_CHAT](msg.chat[key][0], msg.chat[key][1], msg.chat[key][2]);
             }
         }
     
         return Router;
+    
+    }());
+
+    var ChatHistory = (function() {
+        'use strict';
+    
+        function ChatHistory() {
+            var p = {},
+                messages = [],
+                self = this,
+                bool = false;
+                
+            
+            p.add = function (octocat, msg, img) {
+                if (msg.length === 0) return;
+                messages.push(self.createMessageElement(octocat, msg, bool, img));
+                bool = !bool;
+            }
+            return p;
+        }
+        
+        ChatHistory.prototype.createMessageElement = function (octocat, msg, isColor, img) {
+            var color = isColor ? '#E5ECFF' : '#FFF';
+            var $div = $('<div></div>').addClass('history-row').css({
+                backgroundColor: color
+            });
+            var $avatar;
+            if (octocat) {
+                $avatar = $('<div></div>').addClass('avatar').css({
+                    backgroundImage: "url('" + 'http://octodex.github.com/images/' + icons[octocat.settings.image] + "')",
+                });
+            } else {
+                $avatar = $('<div></div>').addClass('avatar').css({
+                    backgroundImage: "url('" + 'http://octodex.github.com/images/' + icons[img] + "')",
+                });
+            }
+            
+            var $content = $('<div></div>').addClass('content').html(escapeHtml(msg));
+            $div.append($avatar);
+            $div.append($content);
+            $('.history').append($div).clearQueue().stop().animate({
+                scrollTop: $('.history').prop("scrollHeight")
+            }); 
+            return $div;
+        } 
+    
+        return ChatHistory;
     
     }());
 
@@ -75,7 +130,6 @@ $(function () {
                 y: settings.y || 100,
                 width: 150,
                 height: 150,
-                text: null,
                 image: settings.image || Math.floor(Math.random() * icons.length)
             };
             if (isSelf) {
@@ -98,6 +152,7 @@ $(function () {
             $('body').append(this.$div);
             
             this.$bubble = $('<div></div>').addClass("bubble");
+            this.$bubble.hide();
             this.$div.append(this.$bubble);
         }
 
@@ -105,6 +160,7 @@ $(function () {
             this.$bubble.html(escapeHtml(msg));
             if (msg.length > 0) {
                 this.$bubble.show();
+                history.add(this, msg);
             } else {
                 this.$bubble.hide();
             }
@@ -126,14 +182,15 @@ $(function () {
     }());
 
     var channel = new HydnaChannel('test123.hydna.net', 'rwe'),
-        router = new Router();
+        router = new Router(),
+        history = new ChatHistory();
     new Octocat(null, true);
 
     channel.onsignal = function(e) {
         var msg = JSON.parse(e.message);
-        console.log(msg);
+        //console.log(msg);
         if (msg.id === Octocat.self.id) {
-            console.log("return");
+            //console.log("return");
             return;
         }
         if (!Octocat.self.id) {
@@ -167,7 +224,6 @@ $(function () {
 
     // USER MOVE CLICK
     window.addEventListener('click', function (e) {
-        console.log(e.target.className);
         if (e.target.className.indexOf('noclick') != -1) return;
         var loc = {x: e.pageX, y: e.pageY};
         Octocat.self[Messages.USER_MOVE](loc);
